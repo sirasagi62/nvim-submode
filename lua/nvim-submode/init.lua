@@ -1,5 +1,5 @@
-local Trie = require("lua.nvim-submode.trie")
-local Queue = require("lua.nvim-submode.queue")
+local Trie = require("nvim-submode.trie")
+local Queue = require("nvim-submode.queue")
 local DEBUG = false
 local function debugPrint(...)
   if DEBUG == true then
