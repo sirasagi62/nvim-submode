@@ -404,8 +404,12 @@ function M.enable(mode, init_buf)
           M.context.timeoutlen_timer = nil
         end
 
+        if type(rhs_callback) == "nil" then
+          return false
+        end
+
         if type(rhs_callback) ~= "function" then
-          vim.notify("LOGIC ERROR: rhs_callback is not function", vim.log.levels.ERROR)
+          vim.notify("LOGIC ERROR: rhs_callback is not function: " .. tostring(rhs_callback), vim.log.levels.ERROR)
           return true
         end
 
@@ -517,14 +521,15 @@ end
 ---set submode state
 ---@param state table the next state of submode
 function M.set_state(state)
-  assert(M.context.name~=nil,"set_state can only be used within a submode.")
+  assert(M.context.name ~= nil, "set_state can only be used within a submode.")
   M.context.state = state
 end
 
 ---get submode state
 ---@return table|nil curren_state the current state
 function M.get_state()
-  assert(M.context.name~=nil,"set_state can only be used within a submode.")
+  assert(M.context.name ~= nil, "set_state can only be used within a submode.")
   return M.context.state
 end
+
 return M

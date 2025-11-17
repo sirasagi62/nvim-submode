@@ -1,4 +1,4 @@
-Output ./assets/fizzbuzz.gif
+Output ./assets/capslock.gif
 Set Shell "zsh"
 Set Theme "TokyoNightStorm"
 Set FontFamily "CaskaydiaCove Nerd Font"
@@ -15,19 +15,14 @@ Type@0ms ":1"
 Enter
 Type@0ms "0"
 Sleep 5.0
+Type "i"
 Show
 Sleep 2.0
-Type "i"
-Ctrl+F
-Sleep 2.0
-Type "f"
-Sleep 2.0
-Type "15f"
-Sleep 1.7
-Type "2f"
-Sleep 1.7
-
-Escape
-Sleep 2.0
+Type "abcdefghijk"
+Ctrl+L
+Type "abcdefghijk"
+Ctrl+L
+Type "abcdefghijk"
+Sleep 3.0
 Hide
 Type@0ms ":qa!" Enter
