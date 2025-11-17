@@ -502,6 +502,11 @@ end
 -- Utility Functions
 function M.countable(action)
   return function(count, keys, anys)
+    -- A count of 0 means there is no prefix
+    -- so the action is performed only once.
+    if count == 0 then
+      count = 1
+    end
     local res
     for _ = 1, count, 1 do
       res = action(count, keys, anys)
