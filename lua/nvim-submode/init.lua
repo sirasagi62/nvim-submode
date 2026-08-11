@@ -52,6 +52,16 @@ function M.get_state()
 end
 
 function M.get_statusline()
+  local current = require("nvim-submode.session").current()
+  if current then
+    return {
+      basemode = M.state.basemode,
+      submode = current.id,
+      display_name = current.display_name or current.id,
+      color = current.color,
+      user_object = M.state.user_object,
+    }
+  end
   return {
     basemode = M.state.basemode,
     submode = M.state.submode,
@@ -104,6 +114,20 @@ function M.refresh_statusline()
     if not ok then
       vim.notify("nvim-submode statusline adapter failed: " .. err, vim.log.levels.ERROR)
     end
+  end
+end
+
+-- New runtimes use this notification path so callbacks are always invoked on
+-- the main loop, after the session transition has completed.
+function M.notify_statusline()
+  local state = M.get_statusline()
+  for _, refresh in ipairs(statusline_adapters) do
+    vim.schedule(function()
+      local ok, err = pcall(refresh, state)
+      if not ok then
+        vim.notify("nvim-submode statusline adapter failed: " .. err, vim.log.levels.ERROR)
+      end
+    end)
   end
 end
 
@@ -607,11 +631,13 @@ function M.countable(action)
 end
 
 function M.get_submode_name()
-  return M.context.display_name or nil
+  local current = require("nvim-submode.session").current()
+  return (current and (current.display_name or current.id)) or M.context.display_name or nil
 end
 
 function M.get_submode_color()
-  return M.context.color or nil
+  local current = require("nvim-submode.session").current()
+  return (current and current.color) or M.context.color or nil
 end
 
 ---set submode state
