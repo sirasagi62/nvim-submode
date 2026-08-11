@@ -13,6 +13,16 @@ local SUBMODE_COUNT_DISABLE = -1
 local M = {}
 M.EXIT_SUBMODE = -2
 
+local statusline_adapters = {}
+
+M.state = {
+  basemode = "",
+  submode = nil,
+  submode_display_name = nil,
+  submode_color = nil,
+  user_object = {},
+}
+
 function M.reset_context()
   return {
     -- namespace
@@ -32,6 +42,78 @@ end
 
 M.context = M.reset_context()
 M.after_leave = function() end
+
+function M.getState()
+  return M.state
+end
+
+function M.get_state()
+  return M.context.state
+end
+
+function M.get_statusline()
+  return {
+    basemode = M.state.basemode,
+    submode = M.state.submode,
+    display_name = M.state.submode_display_name,
+    color = M.state.submode_color,
+    user_object = M.state.user_object,
+  }
+end
+
+function M.getStatusline()
+  return M.get_statusline()
+end
+
+function M.register_statusline(adapter)
+  local refresh
+  if type(adapter) == "function" then
+    refresh = adapter
+  elseif type(adapter) == "table" and type(adapter.refresh) == "function" then
+    refresh = function(state)
+      adapter:refresh(state)
+    end
+  else
+    error("statusline adapter must be a function or an object with refresh()")
+  end
+
+  statusline_adapters[#statusline_adapters + 1] = refresh
+  local registered = true
+  return function()
+    if not registered then
+      return
+    end
+    registered = false
+    for index, current in ipairs(statusline_adapters) do
+      if current == refresh then
+        table.remove(statusline_adapters, index)
+        return
+      end
+    end
+  end
+end
+
+function M.registerStatusline(adapter)
+  return M.register_statusline(adapter)
+end
+
+function M.refresh_statusline()
+  local state = M.get_statusline()
+  for _, refresh in ipairs(statusline_adapters) do
+    local ok, err = pcall(refresh, state)
+    if not ok then
+      vim.notify("nvim-submode statusline adapter failed: " .. err, vim.log.levels.ERROR)
+    end
+  end
+end
+
+function M.refreshStatusline()
+  return M.refresh_statusline()
+end
+
+function M.setUserState(user_state)
+  M.state.user_object = user_state
+end
 
 
 local function get_mode_char()
@@ -289,7 +371,12 @@ function M.enable(mode, init_buf)
   M.context.name = mode.name
   M.context.display_name = mode.display_name
   M.context.color = mode.color
+  M.state.submode = mode.name
+  M.state.submode_display_name = mode.display_name
+  M.state.submode_color = mode.color
   local is_count_enable = mode.is_count_enable
+
+  M.refresh_statusline()
 
   mode.after_enter()
   M.after_leave = mode.after_leave
@@ -497,6 +584,10 @@ function M.disable()
     M.context.ns = nil
   end
   M.context = M.reset_context()
+  M.state.submode = nil
+  M.state.submode_display_name = nil
+  M.state.submode_color = nil
+  M.refresh_statusline()
 end
 
 -- Utility Functions
